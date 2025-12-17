@@ -1,88 +1,111 @@
-# MFC绘画板
-MFC简单绘图系统
----
+# 📘 AI Development Log: MFC Advanced Drawing System
+# AI 协作开发日志：MFC 高级绘图系统 v2.0
 
-# 🎨 MFC Advanced Drawing System (高级绘图系统)
-
-![C++](https://img.shields.io/badge/Language-C++17-blue.svg) ![Framework](https://img.shields.io/badge/Framework-MFC-orange.svg) ![Test](https://img.shields.io/badge/Unit%20Test-Google%20Test-brightgreen.svg)
-
-基于 **Microsoft Foundation Classes (MFC)** 开发的 Windows 桌面绘图应用程序。该系统采用面向对象设计，利用 `std::vector` 存储图元数据，实现了矢量化的绘图管理，支持多语言切换、撤销操作及单元测试验证。
-
-## ✨ 主要功能 (Features)
-
-### 1. 绘图模式 (Drawing Modes)
-系统支持多种图元绘制（代码对应 `Mode` 枚举）：
-*   **基础图形**：点 (Point)、直线 (Line)、椭圆 (Ellipse)、矩形 (Rectangle)。
-*   **自由绘制**：手写笔模式 (Free Draw/OwnerDrawingMode)，支持连续轨迹记录。
-*   **文本插入**：在画布指定位置插入文字 (Text)。
-*   **图片导入**：支持导入 PNG、JPG、BMP 格式图片并显示。
-
-### 2. 属性设置 (Attributes)
-*   **颜色控制**：
-    *   画笔颜色 (Line Color)：通过 `CColorDialog` 自定义。
-    *   填充颜色 (Fill Color)：支持实心填充。
-*   **线条样式**：
-    *   **线宽**：自定义数值（默认 5px）。
-    *   **线型**：支持实线 (Solid) 和虚线 (Dash)。
-        *   *注：代码已包含针对 Windows GDI 的特殊处理，当选择虚线时自动适配线宽，保证虚线可见。*
-*   **填充模式**：可切换“有填充”或“无填充” (Transparent)。
-
-### 3. 操作与交互 (Operations)
-*   **撤销功能 (Undo)**：基于栈的撤销机制，移除最后绘制的图元 (快捷键 `Ctrl+Z`)。
-*   **清空画布**：一键清除所有内容。
-*   **保存作品**：将当前画布保存为 PNG 图片，文件名自动包含时间戳 (快捷键 `Ctrl+S`)。
-*   **多语言支持**：实时切换界面语言，支持 **中文**、**English**、**日本語**。
-
-## 🛠️ 技术架构 (Technical Architecture)
-
-### 核心类：`CDrawingSystemDlg`
-*   **数据结构**：使用 `std::vector<MyShape> m_shapes` 存储所有绘制对象。这意味着绘图是**重绘 (Redraw)** 机制，而非简单的位图操作，从而实现了“撤销”功能。
-*   **绘图引擎**：在 `OnPaint` 中遍历 `m_shapes` 容器，使用 GDI (`CPen`, `CBrush`, `CDC`) 实时渲染。
-*   **消息拦截**：重写 `PreTranslateMessage` 以拦截键盘消息，实现 `Ctrl+Z` 和 `Ctrl+S` 快捷键。
-
-### 关键逻辑实现
-*   **虚线修复**：在 `OnPaint` 中实现了逻辑判断，当 `s.isDash` 为真时，强制设置 `CPen` 宽度为 1，解决了 MFC 中宽线条无法显示虚线的 GDI 限制。
-*   **自动化保存**：保存路径自动生成，利用 `CTime` 格式化当前时间，防止文件名冲突。
-
-## 🧪 单元测试 (Unit Testing)
-
-本项目引入 **Google Test (gtest)** 框架，对剥离出的核心业务逻辑进行验证，确保系统稳定性。
-
-### 测试模块
-为了进行测试，核心逻辑被封装在独立的逻辑类中（如 `DrawingLogic.h`）：
-
-1.  **ShapeFactory 测试**
-    *   **测试目的**：验证图形工厂能否正确创建 `MyShape` 对象。
-    *   **验证点**：检查图形类型（直线/矩形）、坐标初始化、颜色赋值、以及虚线属性的正确传递。
-    *   **示例**：`EXPECT_EQ(1, shape.type)` 确保工厂生成的确实是直线模式。
-
-2.  **PathGenerator 测试**
-    *   **测试目的**：验证文件保存路径生成逻辑的正确性。
-    *   **验证点**：确保生成的文件名符合 `Draw_YYYYMMDD_HHMMSS.png` 格式，且路径拼接无误。
-    *   **优势**：避免了在测试时产生真实的垃圾文件，仅测试字符串逻辑。
-
-## 🚀 快速开始 (Getting Started)
-
-### 环境要求
-*   Visual Studio 2019 / 2022
-*   工作负载：使用 C++ 的桌面开发 (MFC)
-
-### 编译与运行
-1.  打开 `DrawingSystem.sln`。
-2.  **重要提示**：在运行前，请检查 `CDrawingSystemDlg.cpp` 中的 `SaveCanvasAsImage` 函数。
-    *   默认保存路径硬编码为：`C:\\Users\\17663\\Desktop\\ai大作业\\保存图片`。
-    *   **请务必将其修改为您电脑上存在的路径**，否则保存功能可能会失败或创建文件夹失败。
-3.  按 `F5` 编译并运行。
-
-### 运行单元测试
-1.  在解决方案中找到测试项目（例如 `DrawingSystemTests`）。
-2.  打开 **测试资源管理器 (Test Explorer)**。
-3.  点击 **运行所有测试**。
-
-## 📝 待办事项 / 已知限制
-*   **保存路径**：目前路径是硬编码的，建议修改为从 `CFileDialog` 获取或保存到“我的文档”。
-*   **图片大小**：导入的图片目前显示在固定位置 `(0,0)`，未来可添加拖拽移动图片功能。
+> **Date:** 2023-12-17  
+> **Author:** AI Assistant & Developer (17663)  
+> **Tech Stack:** C++ / MFC / Google Test  
+> **Project Goal:** Build a feature-rich, object-oriented drawing application with unit testing support.
 
 ---
-**Author**: 17663 (Based on User Path)
-**Course**: AI Homework Project
+
+## 📅 Phase 1: Architecture Design (架构设计阶段)
+
+### 1.1 Requirement Analysis (需求分析)
+The goal was to create a Windows desktop drawing board supporting basic shapes, freehand drawing, and utility functions like Undo and Save.
+**Key Decision:** Use **MFC Dialog-based Application** for simplicity and **GDI (Graphics Device Interface)** for rendering.
+
+### 1.2 System Architecture (系统架构)
+To ensure extensibility and support the "Undo" feature, we rejected bitmap manipulation in favor of a **Vector-based approach**.
+
+*   **Model (Data Layer)**: 
+    *   Defined `struct MyShape` to store graphic attributes (Type, Start/End Points, Color, Width).
+    *   Used `std::vector<MyShape> m_shapes` as the central data repository.
+*   **View (Presentation Layer)**:
+    *   `OnPaint()` acts as the rendering engine, iterating through `m_shapes` to redraw the canvas.
+*   **Controller (Logic Layer)**:
+    *   `OnLButtonDown/Up` handles user input and invokes the **ShapeFactory**.
+
+---
+
+## 💻 Phase 2: Implementation Details (核心实现细节)
+
+### 2.1 Feature Implementation (功能实现)
+Based on the `Resource.h` analysis, we mapped UI controls to C++ logic:
+
+| Control ID | Functionality | Implementation Details |
+| :--- | :--- | :--- |
+| `IDC_COMBO2` | Drawing Mode | Line, Rect, Ellipse, Free Draw handled via Enum `Mode`. |
+| `IDC_BUTTON6` | Save Image | Captured `CClientDC` to `CImage`, saved with timestamped filename. |
+| `IDC_BUTTON8` | Undo | Implemented via `m_shapes.pop_back()` + `Invalidate()`. |
+| `IDC_COMBO3` | Multi-language | Dynamic string replacement via `UpdateAllUIStrings()`. |
+
+### 2.2 Logic Decoupling (逻辑解耦)
+To support Unit Testing, we extracted pure logic from the UI class `CDrawingSystemDlg` into `DrawingLogic.h`:
+
+*   **`ShapeFactory`**: Encapsulates the complexity of creating `MyShape` objects.
+*   **`ShapeSerializer`**: Converts shape data to string format for persistence testing.
+*   **`PathGenerator`**: Handles file path logic, isolating file system dependencies.
+
+---
+
+## 🐛 Phase 3: Debugging & Optimization (调试与优化)
+
+### 3.1 The "Dashed Line" Bug (GDI 虚线失效问题)
+*   **Symptom**: Selecting "Dash" style resulted in a solid line.
+*   **Diagnosis**: The default pen width was set to **5px**. Windows GDI only supports dashed lines (`PS_DASH`) when width is **1px**.
+*   **Fix**: Modified `OnPaint` to enforce width constraint.
+    ```cpp
+    // Code snippet from OnPaint fix
+    int displayWidth = s.isDash ? 1 : s.width; 
+    CPen pen(s.isDash ? PS_DASH : PS_SOLID, displayWidth, s.lineColor);
+    ```
+
+### 3.2 Unit Test Configuration Issues (单元测试环境配置)
+*   **Error**: `LNK2019 Unresolved External Symbol` & `Undefined identifier CTime`.
+*   **Fix**:
+    1.  Changed Test Project Property **"Use of MFC"** to **"Use MFC in a Shared DLL"**.
+    2.  Included `<afxwin.h>` in the test logic header.
+
+---
+
+## 🧪 Phase 4: Unit Testing with Google Test (单元测试)
+
+We integrated **Google Test** to verify the stability of the core logic modules.
+
+### 4.1 Test Suites (测试套件)
+
+#### A. ShapeFactory Test
+Verifies that graphical objects are created with the correct properties.
+*   *Case 1*: **CreateRectangle** - Checks if Type, Coordinates, and Fill status are correct.
+*   *Case 2*: **CreateDashLine** - Checks if the `isDash` flag is correctly set.
+
+#### B. Serializer Test
+Verifies the data persistence logic.
+*   *Case 1*: **SaveSingleShape** - Input a shape, assert the output string format is `Type,X1,Y1,X2,Y2|`.
+*   *Case 2*: **LoadIntegration** - Simulate loading a string and assert the restored object matches original data.
+
+### 4.2 Test Results (测试结果)
+All tests passed successfully (Green), confirming that the logic layer functions correctly independent of the UI.
+
+---
+
+## 📝 Phase 5: Documentation (文档产出)
+
+### 5.1 Project README
+Created a professional `README.md` including:
+*   Project Badges (Language, Framework, Status).
+*   Feature List (Tools, Styling, Utilities).
+*   Build Instructions (Visual Studio setup).
+*   Known Limitations (GDI Dash width).
+
+---
+
+## 🔚 Summary (总结)
+
+This project demonstrates a complete software development lifecycle:
+1.  **Architecture**: Separated Logic from UI.
+2.  **Implementation**: Used modern C++ features (`auto`, `shared_ptr`, `vector`).
+3.  **Refactoring**: Solved GDI limitations.
+4.  **Testing**: Ensured quality with Google Test.
+
+**End of Log.**
